@@ -1,9 +1,14 @@
+#include <locale.h>
 #include <Eigen/Dense>
+#define _USE_MATH_DEFINES
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 #include <cmath>
 #include <iostream>
 #include <vector>
+#include <matplot/matplot.h>
 
-// TODO: uppercase globals
 std::vector<double> PROFILE = {150.2, 153.3, 171.6, 96,    125.1, 155,   158,
                                134.5, 134.5, 112.7, 83.1,  102.2, 151.4, 109.5,
                                148.4, 83.2,  180.1, 180.1, 191.8, 177,   77.1,
@@ -39,10 +44,10 @@ std::vector<double> Head_max(PROFILE);
 std::vector<double> kavitacia(n, 0);
 std::vector<double> Head_x(n, 0);
 std::vector<double> Head(n, 0);
-std::vector<double> Q_FROM_PUMP2{1000, 1250, 1500, 1750, 2000};
-std::vector<double> Q_FROM_PUMP1{1000, 1250, 1500, 1750, 2000};
-std::vector<double> HEAD_FROM_PUMP2{260, 253, 245, 235, 222};
-std::vector<double> HEAD_FROM_PUMP1{243, 237, 233, 225, 218};
+std::vector<double> Q_FROM_PUMP2{1000.0, 1250.0, 1500.0, 1750.0, 2000.0};
+std::vector<double> Q_FROM_PUMP1{1000.0, 1250.0, 1500.0, 1750.0, 2000.0};
+std::vector<double> HEAD_FROM_PUMP2{260.0, 253.0, 245.0, 235.0, 222.0};
+std::vector<double> HEAD_FROM_PUMP1{243.0, 237.0, 233.0, 225.0, 218.0};
 std::vector<double> NASOS2;
 std::vector<double> NASOS4;
 std::vector<std::vector<double>> FINAL_SAMOTEK{{0, 0, 0, 0, 0},
@@ -61,6 +66,7 @@ double Bisection(double, double, double (*)(double));
 std::vector<double> SolveLlss(std::vector<double>, std::vector<double>);
 
 int main() {
+  setlocale(LC_ALL, "Russian");
   CountGlobals();
   CalculateConsumption();
   CalculateGravityFlowAreas();
@@ -98,12 +104,28 @@ std::vector<double> SolveLlss(std::vector<double> Q_FROM_PUMP,
   res[0] *= (-1);
   return res;
 }
-// TODO: plots
-void PlotEverything() { std::cout << "Here will be plots" << std::endl; }
+
+void PlotEverything() {
+    using namespace matplot;
+    tiledlayout(1, 2);
+    auto ax1 = nexttile();
+    plot( DLINA, PROFILE, DLINA, Head_max, DLINA, Head);
+    //ylabel(ax1, "Напор, м");
+    //xlabel(ax1 "Расстояние, км");
+    //title(ax1, "График распределения напоров");
+    auto ax2 = nexttile();
+    plot(ax2, DLINA, Pressure, DLINA, Pmax_mass);
+    //ylabel(ax2, "Давление, МПа");
+    //xlabel(ax2, "Расстояние, км");
+    //title(ax2, "График распределения давлений");
+    //::matplot::legend(ax1, { "Высщтные отметки Z(X)", "Несущая способность Hmax(X)", "Напор H(X)" });
+    //::matplot::legend(ax2, { "Давление P(X)", "Несущая способность Pmax(X)" });
+    show();
+}
 
 double Bisection(double a, double b, double (*function)(double)) {
   if (function(a) * function(b) >= 0) {
-    std::cout << "РњРµС‚РѕРґ Р±РёСЃРµРєС†РёРё РЅРµ РїСЂРёРјРµРЅРёРј" << std::endl;
+    std::cout << "Метод бисекции не применим" << std::endl;
     return 0.0;
   }
   int iter_count = 0;
@@ -176,7 +198,7 @@ double CalculateDeviation(double Q) {
       no_iter = 1;
     if (Head[i] < kavitacia[i] && no_iter == 0) {
       if (i == 0 || i == NPS2 || i == NPS3) {
-        std::cout << "РќР°СЂСѓС€РµРЅРѕ СѓСЃР»РѕРІРёРµ РїРѕРґРїРѕСЂР°" << std::endl;
+        std::cout << "Нарушено условие подпора" << std::endl;
       } else {
         x_sam = L[i + 1] +
                 (L[i + 1] - L[i]) * (Head[i + 1] - Z[i + 1] - Hy) /
@@ -198,7 +220,7 @@ double CalculateDeviation(double Q) {
 
 void CalculateConsumption() {
   Q_last = Bisection(0.2, 1.2, &CalculateDeviation);
-  std::cout << "Р Р°СЃС…РѕРґ [Рј3/c] = " << Q_last << std::endl;
+  std::cout << "Расход [м3/c] = " << Q_last << std::endl;
 }
 
 void CalculateGravityFlowAreas() {
@@ -232,22 +254,22 @@ void CalculateGravityFlowAreas() {
     }
   }
   if (NUMBER_SAM > 0) {
-    std::cout << "РљРѕР»РёС‡РµСЃС‚РІРѕ СЃР°РјРѕС‚РµС‡РЅС‹С… СѓС‡Р°СЃС‚РєРѕРІ = " << NUMBER_SAM << std::endl;
+    std::cout << "Количество самотечных участков = " << NUMBER_SAM << std::endl;
     for (int i = 0; i < 5; i++) {
-      std::cout << "(РєРѕРѕСЂРґРёРЅР°С‚Р° РєРѕРЅС†Р°, РєРѕРѕСЂРґРёРЅР°С‚Р° РЅР°С‡Р°Р»Р°, РІС‹СЃРѕС‚РєР° РєРѕРЅС†Р°, "
-                   "РІС‹СЃРѕС‚РєР° РЅР°С‡Р°Р»Р°, СЃС‚РµРїРµРЅСЊ Р·Р°РїРѕР»РЅРµРЅРёСЏ): "
+      std::cout << "(координата конца, координата начала, высотка конца, "
+                   "высотка начала, степень заполнения): "
                 << i + 1 << " = " << FINAL_SAMOTEK[i][0] << FINAL_SAMOTEK[i][1]
                 << FINAL_SAMOTEK[i][2] << FINAL_SAMOTEK[i][3]
                 << FINAL_SAMOTEK[i][4] << std::endl;
     }
   } else {
-    std::cout << "РЎР°РјРѕС‚РµС‡РЅС‹Рµ СѓС‡Р°СЃС‚РєРё РѕС‚СЃСѓС‚СЃС‚РІСѓСЋС‚" << std::endl;
+    std::cout << "Самотечные участки отсутствуют" << std::endl;
   }
 }
 
 void CalculatePressure() {
   Pmax_mass = std::vector<double>(Head.size(), Pmax / 1000000);
   Pressure = std::vector<double>(Head.size(), 0);
-  for (int i = Head.size() - 1; i >= 0; i--)
+  for (int i = (Head.size() - 1); i >= 0; i--)
     Pressure[i] = (Head[i] - PROFILE[i]) * (plotnost * 9.81) / 1000000;
 }
