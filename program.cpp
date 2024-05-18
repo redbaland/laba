@@ -1,8 +1,9 @@
-#include <Eigen/Dense>
 #include <cmath>
 #include <iostream>
-#include <matplot/matplot.h>
 #include <vector>
+
+#include <Eigen/Dense>
+#include <matplot/matplot.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -39,7 +40,7 @@ double XSAM = 0;
 double HSAM = 0;
 std::vector<double> PMAXMASS;
 std::vector<double> PRESSURE;
-std::vector<double> HEADMAX(PROFILE);
+std::vector<double> HEADMAX(N, 0);
 std::vector<double> CAVITATION(N, 0);
 std::vector<double> HEADX(N, 0);
 std::vector<double> HEAD(N, 0);
@@ -74,7 +75,7 @@ int main() {
 
 void CountGlobals() {
   for (int i = 0; i < N; i++) {
-    HEADMAX[i] += HMAX;
+    HEADMAX[i] += HMAX + PROFILE[i];
     CAVITATION[i] = HY + PROFILE[i];
   }
   CAVITATION[N - 1] = 0;
